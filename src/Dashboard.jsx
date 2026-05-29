@@ -26,10 +26,13 @@ export default function Dashboard() {
  const rtcConfig = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun2.l.google.com:19302' }
+    {
+      urls: 'turn:global.metered.ca:443',
+      username: 'YOUR_METERED_USERNAME',
+      credential: 'YOUR_METERED_PASSWORD'
+    }
   ],
-  iceCandidatePoolSize: 10 // تحسين سرعة بناء الاتصال عبر الإنترنت العام
+  iceCandidatePoolSize: 10
 };
   useEffect(() => {
     // 1. تحديثات ساعة النظام والـ Telemetry

@@ -16,13 +16,16 @@ export default function MobileCam() {
   const peerConnection = useRef(null);
   const localStream = useRef(null);
 
-  const rtcConfig = {
+const rtcConfig = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun2.l.google.com:19302' }
+    {
+      urls: 'turn:global.metered.ca:443',
+      username: 'YOUR_METERED_USERNAME',
+      credential: 'YOUR_METERED_PASSWORD'
+    }
   ],
-  iceCandidatePoolSize: 10 // تحسين سرعة بناء الاتصال عبر الإنترنت العام
+  iceCandidatePoolSize: 10
 };
 
   // 1. تشغيل الكاميرا فور فتح الرابط وتأكيد الصلاحيات

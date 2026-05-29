@@ -14,8 +14,8 @@
   "react-dom": "^18.3.1",
   "socket.io-client": "^4.7.5",
   "lucide-react": "^0.378.0",
-  "express": "^4.19.2",
-"socket.io": "^4.7.5"
+  "express": "^4.19.2"
+
 },
 "devDependencies": {
   "@types/react": "^18.3.3",

@@ -222,7 +222,7 @@ export default function Dashboard() {
             <div className="flex items-center space-x-2 space-x-reverse mb-4 text-blue-400"><Radio size={18} /><h2> الربط المباشر مع هاتف </h2></div>
             <p className="text-xs text-slate-400 mb-4 leading-relaxed"> امسحي الرمز للربط المباشر مع الهاتف</p>
             <div className="bg-white p-3 rounded-xl max-w-[150px] mx-auto border border-purple-500/30">
-             // سيقوم بقراءة رابط الموقع الحالي المرفوع أون لاين وتوليد QR للجوال فوراً
+             
 <img 
   src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${window.location.origin}/ingest`} 
   alt="QR Link" 

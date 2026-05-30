@@ -10,8 +10,8 @@ const socket = io(SERVER_URL);
 
 export default function Dashboard() {
   const [cameras, setCameras] = useState({
-    'CAM-01': { connected: false, name: 'iPhone 15 Pro', muted: false, fps: 0, bitrate: '0 Mbps' },
-    'CAM-02': { connected: false, name: 'Galaxy S24 Ultra', muted: false, fps: 0, bitrate: '0 Mbps' }
+    'CAM-01': { connected: false, name: 'ستيم', muted: false, fps: 0, bitrate: '0 Mbps' },
+    'CAM-02': { connected: false, name: 'المهارات الرقمية', muted: false, fps: 0, bitrate: '0 Mbps' }
   });
   
   const [systemHealth, setSystemHealth] = useState({ cpu: 18, ram: 38, latency: 5 });
@@ -130,7 +130,7 @@ export default function Dashboard() {
           </div>
           <div>
             <h1 className="text-lg font-black tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-500 uppercase">
-              Dual Mobile Live Stream Studio
+              العرض المباشر | مدراس الأندلس الأهلية -الزهراء بنات
             </h1>
           </div>
         </div>

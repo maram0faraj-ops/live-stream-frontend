@@ -25,17 +25,33 @@ export default function Dashboard() {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [inputMinutes, setInputMinutes] = useState(5); 
 
-  // إنشاء مرجع ثابت للصوت لتفادي قيود المتصفح المتكررة
-  const alarmAudio = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-84.wav'));
-
-  // دالة تشغيل جرس التنبيه عند انتهاء الوقت
-  const playAlarmSound = () => {
-    if (alarmAudio.current) {
-      alarmAudio.current.currentTime = 0; // إعادة الصوت للبداية
-      alarmAudio.current.play().catch(e => console.log("خطأ في تشغيل الصوت:", e));
-    }
-  };
-
+  // دالة توليد صوت تنبيه رقمي احترافي بدون روابط خارجية
+const playAlarmSound = () => {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // توليد 3 دقات متتالية للتنبيه (Beep.. Beep.. Beep)
+    [0, 0.4, 0.8].forEach((delay) => {
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(880, audioCtx.currentTime + delay); // نغمة جرس مرتفعة
+      
+      gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime + delay);
+      // إنهاء الدقة بسلاسة
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.2);
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      
+      oscillator.start(audioCtx.currentTime + delay);
+      oscillator.stop(audioCtx.currentTime + delay + 0.2);
+    });
+  } catch (e) {
+    console.log("خطأ في توليد الصوت البرمجي:", e);
+  }
+};
   // تكوين إعدادات STUN/TURN Server لتخطي جدران الحماية للشبكة
   const rtcConfig = {
     iceServers: [
@@ -312,18 +328,11 @@ export default function Dashboard() {
             {/* أزرار التحكم الفورية الجاهزة لتجاوز قيود المتصفح */}
             <div className="flex gap-2 w-full">
               <button
-                onClick={() => {
-                  if (timeLeft > 0) {
-                    // تفعيل الصوت وإيقافه في جزء من الثانية لتجاوز قيود الحجب التلقائي للمتصفح
-                    if (!isTimerRunning && alarmAudio.current) {
-                      alarmAudio.current.play().then(() => {
-                        alarmAudio.current.pause();
-                        alarmAudio.current.currentTime = 0;
-                      }).catch(() => {});
-                    }
-                    setIsTimerRunning(!isTimerRunning);
-                  }
-                }}
+              onClick={() => {
+  if (timeLeft > 0) {
+    setIsTimerRunning(!isTimerRunning);
+  }
+}}
                 disabled={timeLeft === 0}
                 className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold tracking-wide transition-all duration-200 uppercase ${
                   isTimerRunning 

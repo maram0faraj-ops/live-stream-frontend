@@ -21,6 +21,8 @@ export default function Dashboard() {
   const videoRef1 = useRef(null);
   const videoRef2 = useRef(null);
   const peerConnections = useRef({});
+  const [time, setTime] = React.useState(0);
+  const [isTimerRunning, setIsTimerRunning] = React.useState(false);
 
   // تكوين إعدادات STUN Server لتخطي جدران الحماية للشبكة المحلية
  const rtcConfig = {
@@ -33,6 +35,27 @@ export default function Dashboard() {
     }
   ],
   iceCandidatePoolSize: 10
+};
+
+// 2. دالة التحكم في الحساب التصاعدي للمؤقت كل ثانية
+React.useEffect(() => {
+  let interval = null;
+  if (isTimerRunning) {
+    interval = setInterval(() => {
+      setTime((prevTime) => prevTime + 1);
+    }, 1000);
+  } else {
+    clearInterval(interval);
+  }
+  return () => clearInterval(interval);
+}, [isTimerRunning]);
+
+// 3. دالة تحويل الثواني إلى صيغة رقمية احترافية (00:00:00)
+const formatTime = (totalSeconds) => {
+  const hrs = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+  const mins = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+  const secs = String(totalSeconds % 60).padStart(2, '0');
+  return `${hrs}:${mins}:${secs}`;
 };
   useEffect(() => {
     // 1. تحديثات ساعة النظام والـ Telemetry
@@ -230,6 +253,39 @@ export default function Dashboard() {
 />
             </div>
           </div>
+          {/* --- مكون المؤقت التصاعدي الاحترافي --- */}
+<div className="mt-4 bg-[#0d1527] border border-[#1e293b] rounded-xl p-5 flex flex-col items-center justify-center shadow-lg backdrop-blur-md">
+  <div className="text-[#94a3b8] text-xs font-semibold tracking-wider uppercase mb-2 flex items-center gap-2">
+    <span className="w-2 h-2 rounded-full bg-[#38bdf8] animate-pulse"></span>
+    مؤقت البث والعرض المباشر
+  </div>
+  
+  {/* شاشة عرض الوقت */}
+  <div className="text-4xl font-mono font-bold text-white tracking-widest bg-[#070a13] px-6 py-3 rounded-lg border border-[#334155] shadow-inner mb-4 min-w-[200px] text-center">
+    {formatTime(time)}
+  </div>
+  
+  {/* أزرار التحكم بالتوقيت */}
+  <div className="flex gap-2 w-full">
+    <button
+      onClick={() => setIsTimerRunning(!isTimerRunning)}
+      className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold tracking-wide transition-all duration-200 uppercase ${
+        isTimerRunning 
+          ? 'bg-amber-600/20 text-amber-400 border border-amber-500/40 hover:bg-amber-600/30' 
+          : 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-600/30'
+      }`}
+    >
+      {isTimerRunning ? 'إيقاف مؤقت' : 'بدء المؤقت'}
+    </button>
+    
+    <button
+      onClick={() => { setIsTimerRunning(false); setTime(0); }}
+      className="py-2 px-4 rounded-lg text-xs font-bold bg-rose-600/20 text-rose-400 border border-rose-500/40 hover:bg-rose-600/30 transition-all duration-200 uppercase"
+    >
+      إعادة تعيين
+    </button>
+  </div>
+</div>
         </section>
       </main>
     </div>

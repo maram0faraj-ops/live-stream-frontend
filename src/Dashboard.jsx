@@ -25,21 +25,23 @@ export default function Dashboard() {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [inputMinutes, setInputMinutes] = useState(5); 
 
-  // دالة توليد صوت تنبيه رقمي احترافي بدون روابط خارجية
+// دالة توليد صوت تنبيه رقمي مستمر لمدة 5 ثوانٍ كاملة
 const playAlarmSound = () => {
   try {
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    
-    // توليد 3 دقات متتالية للتنبيه (Beep.. Beep.. Beep)
-    [0, 0.4, 0.8].forEach((delay) => {
+    const duration = 5; // مدة التنبيه الكلية بالثواني
+    const beepInterval = 0.4; // الوقت بين كل دقة ودقة (بالثواني)
+
+    // تكرار النغمات على مدار الـ 5 ثوانٍ
+    for (let delay = 0; delay < duration; delay += beepInterval) {
       const oscillator = audioCtx.createOscillator();
       const gainNode = audioCtx.createGain();
       
       oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(880, audioCtx.currentTime + delay); // نغمة جرس مرتفعة
+      oscillator.frequency.setValueAtTime(880, audioCtx.currentTime + delay); // تردد النغمة
       
-      gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime + delay);
-      // إنهاء الدقة بسلاسة
+      gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime + delay);
+      // جعل النغمة تنتهي بسلاسة قبل الدقة التي تليها
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.2);
       
       oscillator.connect(gainNode);
@@ -47,7 +49,7 @@ const playAlarmSound = () => {
       
       oscillator.start(audioCtx.currentTime + delay);
       oscillator.stop(audioCtx.currentTime + delay + 0.2);
-    });
+    }
   } catch (e) {
     console.log("خطأ في توليد الصوت البرمجي:", e);
   }

@@ -2,9 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import { Monitor, VideoOff, Volume2, VolumeX, Scan, Cpu, Activity, Wifi, Clock, Terminal, Radio } from 'lucide-react';
 
-// الاتصال بخادم الإشارات (استبدلي localhost بـ IP اللابتوب عند التجربة من الجوال)
-// استبدلي هذا الرابط برابط السيرفر بعد رفعه على Render (مثال: https://my-signaling-server.onrender.com)
-// استبدلي هذا برابط Render الفعلي وليس Vercel
+// الاتصال بخادم الإشارات
 const SERVER_URL = 'https://livecam-0jst.onrender.com'; 
 const socket = io(SERVER_URL);
 
@@ -22,63 +20,66 @@ export default function Dashboard() {
   const videoRef2 = useRef(null);
   const peerConnections = useRef({});
 
-// 1. حالات المؤقت التنازلي (الوقت المتبقي بالثواني، وحالة التشغيل، والوقت المبدئي المختار)
-const [timeLeft, setTimeLeft] = React.useState(300); // 300 ثانية = 5 دقائق كوضع افتراضي
-const [isTimerRunning, setIsTimerRunning] = React.useState(false);
-const [inputMinutes, setInputMinutes] = React.useState(5); // القيمة الافتراضية في خانة الاختيار
+  // حالات المؤقت التنازلي
+  const [timeLeft, setTimeLeft] = useState(300); // 300 ثانية = 5 دقائق كوضع افتراضي
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [inputMinutes, setInputMinutes] = useState(5); 
 
-// 2. دالة تشغيل جرس التنبيه عند انتهاء الوقت
-const playAlarmSound = () => {
-  // نستخدم رابط صوت جرس رقمي نقي ومفتوح المصدر
-  const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-84.wav');
-  audio.volume = 0.8;
-  audio.play().catch(e => console.log("تنبيه: المتصفح يتطلب تفاعلاً لتشغيل الصوت أولاً:", e));
-};
+  // إنشاء مرجع ثابت للصوت لتفادي قيود المتصفح المتكررة
+  const alarmAudio = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-84.wav'));
 
-  // تكوين إعدادات STUN Server لتخطي جدران الحماية للشبكة المحلية
- const rtcConfig = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    {
-      urls: 'turn:global.metered.ca:443',
-      username: 'YOUR_METERED_USERNAME',
-      credential: 'YOUR_METERED_PASSWORD'
+  // دالة تشغيل جرس التنبيه عند انتهاء الوقت
+  const playAlarmSound = () => {
+    if (alarmAudio.current) {
+      alarmAudio.current.currentTime = 0; // إعادة الصوت للبداية
+      alarmAudio.current.play().catch(e => console.log("خطأ في تشغيل الصوت:", e));
     }
-  ],
-  iceCandidatePoolSize: 10
-};
+  };
 
-// 3. دالة التحكم في الحساب التنازلي
-React.useEffect(() => {
-  let interval = null;
-  if (isTimerRunning && timeLeft > 0) {
-    interval = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
-  } else if (timeLeft === 0 && isTimerRunning) {
+  // تكوين إعدادات STUN/TURN Server لتخطي جدران الحماية للشبكة
+  const rtcConfig = {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      {
+        urls: 'turn:global.metered.ca:443',
+        username: 'YOUR_METERED_USERNAME',
+        credential: 'YOUR_METERED_PASSWORD'
+      }
+    ],
+    iceCandidatePoolSize: 10
+  };
+
+  // دالة التحكم في الحساب التنازلي
+  useEffect(() => {
+    let interval = null;
+    if (isTimerRunning && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && isTimerRunning) {
+      setIsTimerRunning(false);
+      playAlarmSound(); // إطلاق الصوت فوراً عند الوصول لـ 00:00:00
+    } else {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [isTimerRunning, timeLeft]);
+
+  // تحويل الثواني إلى صيغة العرض (00:00:00)
+  const formatTime = (totalSeconds) => {
+    const hrs = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+    const mins = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+    const secs = String(totalSeconds % 60).padStart(2, '0');
+    return `${hrs}:${mins}:${secs}`;
+  };
+
+  // دالة تحديث الوقت عند تغيير المدة يدوياً
+  const handleTimeChange = (mins) => {
+    const minutes = parseInt(mins) || 0;
+    setInputMinutes(minutes);
+    setTimeLeft(minutes * 60);
     setIsTimerRunning(false);
-    playAlarmSound(); // إطلاق الصوت فوراً عند الوصول لـ 00:00:00
-  } else {
-    clearInterval(interval);
-  }
-  return () => clearInterval(interval);
-}, [isTimerRunning, timeLeft]);
-
-// 4. تحويل الثواني إلى صيغة العرض (00:00:00)
-const formatTime = (totalSeconds) => {
-  const hrs = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-  const mins = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-  const secs = String(totalSeconds % 60).padStart(2, '0');
-  return `${hrs}:${mins}:${secs}`;
-};
-
-// 5. دالة تحديث الوقت عند تغيير المدة يدوياً
-const handleTimeChange = (mins) => {
-  const minutes = parseInt(mins) || 0;
-  setInputMinutes(minutes);
-  setTimeLeft(minutes * 60);
-  setIsTimerRunning(false);
-};
+  };
 
   useEffect(() => {
     // 1. تحديثات ساعة النظام والـ Telemetry
@@ -134,7 +135,6 @@ const handleTimeChange = (mins) => {
     });
 
     socket.on('device-disconnected', (socketId) => {
-      // التعامل مع انقطاع البث المفاجئ
       addLog('error', 'انقطع اتصال أحد الأجهزة التابع للشبكة.');
     });
 
@@ -192,11 +192,11 @@ const handleTimeChange = (mins) => {
 
       {/* MATRIX STREAM GRID */}
       <main className="max-w-[1800px] mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <section class="lg:col-span-3 space-y-6">
+        <section className="lg:col-span-3 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {Object.entries(cameras).map(([id, cam], index) => (
               <div key={id} className="bg-slate-900/40 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl backdrop-blur-xl group hover:border-purple-500/40 transition-all">
-                <div class="p-4 bg-slate-950/60 flex justify-between items-center border-b border-slate-800/60">
+                <div className="p-4 bg-slate-950/60 flex justify-between items-center border-b border-slate-800/60">
                   <div className="flex items-center space-x-3 space-x-reverse">
                     <div className="p-2 bg-slate-900 rounded-lg text-purple-400"><Monitor size={16} /></div>
                     <div>
@@ -268,71 +268,80 @@ const handleTimeChange = (mins) => {
             <div className="flex items-center space-x-2 space-x-reverse mb-4 text-blue-400"><Radio size={18} /><h2> الربط المباشر مع هاتف </h2></div>
             <p className="text-xs text-slate-400 mb-4 leading-relaxed"> امسحي الرمز للربط المباشر مع الهاتف</p>
             <div className="bg-white p-3 rounded-xl max-w-[150px] mx-auto border border-purple-500/30">
-             
-<img 
-  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${window.location.origin}/ingest`} 
-  alt="QR Link" 
-  className="w-full h-auto" 
-/>
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${window.location.origin}/ingest`} 
+                alt="QR Link" 
+                className="w-full h-auto" 
+              />
             </div>
           </div>
-         {/* --- مكون المؤقت التنازلي التفاعلي المطور --- */}
-<div className="mt-4 bg-[#0d1527] border border-[#1e293b] rounded-xl p-5 flex flex-col items-center justify-center shadow-lg backdrop-blur-md">
-  <div className="text-[#94a3b8] text-xs font-semibold tracking-wider uppercase mb-3 flex items-center gap-2">
-    <span className={`w-2 h-2 rounded-full ${isTimerRunning ? 'bg-rose-500 animate-ping' : 'bg-[#38bdf8]'}`}></span>
-    التحكم في زمن العرض والتنبيه
-  </div>
-  
-  {/* لوحة تحديد الوقت يدوياً قبل البدء */}
-  <div className="flex items-center gap-2 mb-4 w-full justify-between bg-[#070a13] p-2 rounded-lg border border-[#1e293b]">
-    <span className="text-xs text-[#94a3b8] mr-1">تحديد المدة:</span>
-    <div className="flex gap-1 items-center">
-      <input 
-        type="number" 
-        min="1" 
-        max="180"
-        value={inputMinutes}
-        onChange={(e) => handleTimeChange(e.target.value)}
-        disabled={isTimerRunning}
-        className="w-16 bg-[#0d1527] border border-[#334155] rounded px-2 py-1 text-center text-sm font-mono text-white focus:outline-none focus:border-[#38bdf8] disabled:opacity-50"
-      />
-      <span className="text-xs text-[#64748b]">دقيقة</span>
-    </div>
-  </div>
-  
-  {/* شاشة عرض الوقت الرقمي الحية */}
-  <div className={`text-4xl font-mono font-bold tracking-widest bg-[#070a13] px-6 py-3 rounded-lg border shadow-inner mb-4 min-w-[200px] text-center transition-all duration-300 ${
-    timeLeft <= 10 && timeLeft > 0 && isTimerRunning
-      ? 'text-rose-500 border-rose-500/50 animate-pulse' 
-      : 'text-white border-[#334155]'
-  }`}>
-    {formatTime(timeLeft)}
-  </div>
-  
-  {/* أزرار التحكم الفورية */}
-  <div className="flex gap-2 w-full">
-    <button
-      onClick={() => {
-        if (timeLeft > 0) setIsTimerRunning(!isTimerRunning);
-      }}
-      disabled={timeLeft === 0}
-      className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold tracking-wide transition-all duration-200 uppercase ${
-        isTimerRunning 
-          ? 'bg-amber-600/20 text-amber-400 border border-amber-500/40 hover:bg-amber-600/30' 
-          : 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-600/30'
-      } disabled:opacity-30`}
-    >
-      {isTimerRunning ? 'إيقاف مؤقت' : 'بدء العرض'}
-    </button>
-    
-    <button
-      onClick={() => { setIsTimerRunning(false); setTimeLeft(inputMinutes * 60); }}
-      className="py-2 px-4 rounded-lg text-xs font-bold bg-rose-600/20 text-rose-400 border border-rose-500/40 hover:bg-rose-600/30 transition-all duration-200 uppercase"
-    >
-      إعادة تعيين
-    </button>
-  </div>
-</div>
+
+          {/* --- مكون المؤقت التنازلي التفاعلي المطور --- */}
+          <div className="mt-4 bg-[#0d1527] border border-[#1e293b] rounded-xl p-5 flex flex-col items-center justify-center shadow-lg backdrop-blur-md">
+            <div className="text-[#94a3b8] text-xs font-semibold tracking-wider uppercase mb-3 flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${isTimerRunning ? 'bg-rose-500 animate-ping' : 'bg-[#38bdf8]'}`}></span>
+              التحكم في زمن العرض والتنبيه
+            </div>
+            
+            {/* لوحة تحديد الوقت يدوياً قبل البدء */}
+            <div className="flex items-center gap-2 mb-4 w-full justify-between bg-[#070a13] p-2 rounded-lg border border-[#1e293b]">
+              <span className="text-xs text-[#94a3b8] mr-1">تحديد المدة:</span>
+              <div className="flex gap-1 items-center">
+                <input 
+                  type="number" 
+                  min="1" 
+                  max="180"
+                  value={inputMinutes}
+                  onChange={(e) => handleTimeChange(e.target.value)}
+                  disabled={isTimerRunning}
+                  className="w-16 bg-[#0d1527] border border-[#334155] rounded px-2 py-1 text-center text-sm font-mono text-white focus:outline-none focus:border-[#38bdf8] disabled:opacity-50"
+                />
+                <span className="text-xs text-[#64748b]">دقيقة</span>
+              </div>
+            </div>
+            
+            {/* شاشة عرض الوقت الرقمي الحية */}
+            <div className={`text-4xl font-mono font-bold tracking-widest bg-[#070a13] px-6 py-3 rounded-lg border shadow-inner mb-4 min-w-[200px] text-center transition-all duration-300 ${
+              timeLeft <= 10 && timeLeft > 0 && isTimerRunning
+                ? 'text-rose-500 border-rose-500/50 animate-pulse' 
+                : 'text-white border-[#334155]'
+            }`}>
+              {formatTime(timeLeft)}
+            </div>
+            
+            {/* أزرار التحكم الفورية الجاهزة لتجاوز قيود المتصفح */}
+            <div className="flex gap-2 w-full">
+              <button
+                onClick={() => {
+                  if (timeLeft > 0) {
+                    // تفعيل الصوت وإيقافه في جزء من الثانية لتجاوز قيود الحجب التلقائي للمتصفح
+                    if (!isTimerRunning && alarmAudio.current) {
+                      alarmAudio.current.play().then(() => {
+                        alarmAudio.current.pause();
+                        alarmAudio.current.currentTime = 0;
+                      }).catch(() => {});
+                    }
+                    setIsTimerRunning(!isTimerRunning);
+                  }
+                }}
+                disabled={timeLeft === 0}
+                className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold tracking-wide transition-all duration-200 uppercase ${
+                  isTimerRunning 
+                    ? 'bg-amber-600/20 text-amber-400 border border-amber-500/40 hover:bg-amber-600/30' 
+                    : 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-600/30'
+                } disabled:opacity-30`}
+              >
+                {isTimerRunning ? 'إيقاف مؤقت' : 'بدء العرض'}
+              </button>
+              
+              <button
+                onClick={() => { setIsTimerRunning(false); setTimeLeft(inputMinutes * 60); }}
+                className="py-2 px-4 rounded-lg text-xs font-bold bg-rose-600/20 text-rose-400 border border-rose-500/40 hover:bg-rose-600/30 transition-all duration-200 uppercase"
+              >
+                إعادة تعيين
+              </button>
+            </div>
+          </div>
         </section>
       </main>
     </div>

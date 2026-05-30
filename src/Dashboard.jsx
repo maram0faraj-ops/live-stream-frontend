@@ -21,8 +21,7 @@ export default function Dashboard() {
   const videoRef1 = useRef(null);
   const videoRef2 = useRef(null);
   const peerConnections = useRef({});
-  const [time, setTime] = React.useState(0);
-  const [isTimerRunning, setIsTimerRunning] = React.useState(false);
+
 // 1. حالات المؤقت التنازلي (الوقت المتبقي بالثواني، وحالة التشغيل، والوقت المبدئي المختار)
 const [timeLeft, setTimeLeft] = React.useState(300); // 300 ثانية = 5 دقائق كوضع افتراضي
 const [isTimerRunning, setIsTimerRunning] = React.useState(false);

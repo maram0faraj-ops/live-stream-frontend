@@ -193,7 +193,7 @@ const playAlarmSound = () => {
     {/* شعار المدرسة المستضاف محلياً */}
     <div className="bg-white/90 p-1.5 rounded-xl border border-slate-700/50 shadow-md">
       <img 
-        src="/school-logo.png" 
+        src="/school-logo.jpg" 
         alt="شعار مدارس الأندلس" 
         className="h-12 w-auto object-contain"
         onError={(e) => {

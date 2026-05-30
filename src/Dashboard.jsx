@@ -202,7 +202,7 @@ export default function Dashboard() {
           <div className="bg-slate-950/80 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
             <div className="p-3 bg-slate-900/60 border-b border-slate-800/60 flex items-center space-x-2 space-x-reverse px-4">
               <Terminal size={14} className="text-purple-400" />
-              <span className="text-xs font-mono text-slate-400">LIVE CORE SIGNAL LOGS</span>
+              <span className="text-xs font-mono text-slate-400"> سجل جودة إشارة البث </span>
             </div>
             <div className="p-4 font-mono text-xs space-y-2 max-h-[140px] overflow-y-auto custom-scrollbar">
               {logs.map(log => (
@@ -219,8 +219,8 @@ export default function Dashboard() {
         {/* SIDE QR PANEL */}
         <section className="space-y-6">
           <div className="bg-gradient-to-b from-slate-900/60 to-slate-950/40 rounded-2xl border border-slate-800 p-5 shadow-xl">
-            <div className="flex items-center space-x-2 space-x-reverse mb-4 text-blue-400"><Radio size={18} /><h2>CAMERA INGESTION QR</h2></div>
-            <p className="text-xs text-slate-400 mb-4 leading-relaxed">امسحي الـ QR المباشر لربط الهاتف فورا عبر بروتوكول Peer-to-Peer.</p>
+            <div className="flex items-center space-x-2 space-x-reverse mb-4 text-blue-400"><Radio size={18} /><h2> الربط المباشر مع هاتف </h2></div>
+            <p className="text-xs text-slate-400 mb-4 leading-relaxed">امسحي الـ QR المباشر لربط الهاتف فورا  .</p>
             <div className="bg-white p-3 rounded-xl max-w-[150px] mx-auto border border-purple-500/20">
              // سيقوم بقراءة رابط الموقع الحالي المرفوع أون لاين وتوليد QR للجوال فوراً
 <img 

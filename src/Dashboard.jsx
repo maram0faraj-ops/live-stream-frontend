@@ -186,27 +186,43 @@ const playAlarmSound = () => {
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-100 antialiased overflow-x-hidden font-sans">
       {/* HEADER HUD */}
-      <header className="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
-        <div className="flex items-center space-x-3 space-x-reverse">
-          <div className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-600"></span>
-          </div>
-          <div>
-            <h1 className="text-lg font-black tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-500 uppercase">
-              العرض المباشر | مدراس الأندلس الأهلية -الزهراء بنات
-            </h1>
-          </div>
-        </div>
+      {/* HEADER HUD */}
+<header className="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+  <div className="flex items-center space-x-4 space-x-reverse">
+    
+    {/* شعار المدرسة المستضاف محلياً */}
+    <div className="bg-white/90 p-1.5 rounded-xl border border-slate-700/50 shadow-md">
+      <img 
+        src="/school-logo.png" 
+        alt="شعار مدارس الأندلس" 
+        className="h-12 w-auto object-contain"
+        onError={(e) => {
+          // حل احتياطي في حال عدم تحميل الصورة ليظهر بدلاً منها أيقونة برمجية ولا ينكسر التصميم
+          e.target.style.display = 'none';
+        }}
+      />
+    </div>
 
-        {/* TELEMETRY */}
-        <div className="flex items-center gap-6 text-xs font-mono bg-slate-900/60 p-2 rounded-xl border border-slate-800" dir="ltr">
-          <div className="flex items-center space-x-1.5 text-blue-400"><Cpu size={14} /><span>CPU: {systemHealth.cpu}%</span></div>
-          <div className="flex items-center space-x-1.5 text-purple-400"><Activity size={14} /><span>RAM: {systemHealth.ram}%</span></div>
-          <div className="flex items-center space-x-1.5 text-emerald-400"><Wifi size={14} /><span>LATENCY: {systemHealth.latency}ms</span></div>
-          <div className="hidden sm:flex items-center space-x-1.5 text-amber-400"><Clock size={14} /><span>{currentTime}</span></div>
-        </div>
-      </header>
+    <div className="relative flex h-3 w-3">
+      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+      <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-600"></span>
+    </div>
+    
+    <div>
+      <h1 className="text-lg font-black tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-500 uppercase">
+        العرض المباشر | مدارس الأندلس الأهلية - الزهراء بنات
+      </h1>
+    </div>
+  </div>
+
+  {/* TELEMETRY */}
+  <div className="flex items-center gap-6 text-xs font-mono bg-slate-900/60 p-2 rounded-xl border border-slate-800" dir="ltr">
+    <div className="flex items-center space-x-1.5 text-blue-400"><Cpu size={14} /><span>CPU: {systemHealth.cpu}%</span></div>
+    <div className="flex items-center space-x-1.5 text-purple-400"><Activity size={14} /><span>RAM: {systemHealth.ram}%</span></div>
+    <div className="flex items-center space-x-1.5 text-emerald-400"><Wifi size={14} /><span>LATENCY: {systemHealth.latency}ms</span></div>
+    <div className="hidden sm:flex items-center space-x-1.5 text-amber-400"><Clock size={14} /><span>{currentTime}</span></div>
+  </div>
+</header>
 
       {/* MATRIX STREAM GRID */}
       <main className="max-w-[1800px] mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">

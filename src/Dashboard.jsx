@@ -23,6 +23,18 @@ export default function Dashboard() {
   const peerConnections = useRef({});
   const [time, setTime] = React.useState(0);
   const [isTimerRunning, setIsTimerRunning] = React.useState(false);
+// 1. حالات المؤقت التنازلي (الوقت المتبقي بالثواني، وحالة التشغيل، والوقت المبدئي المختار)
+const [timeLeft, setTimeLeft] = React.useState(300); // 300 ثانية = 5 دقائق كوضع افتراضي
+const [isTimerRunning, setIsTimerRunning] = React.useState(false);
+const [inputMinutes, setInputMinutes] = React.useState(5); // القيمة الافتراضية في خانة الاختيار
+
+// 2. دالة تشغيل جرس التنبيه عند انتهاء الوقت
+const playAlarmSound = () => {
+  // نستخدم رابط صوت جرس رقمي نقي ومفتوح المصدر
+  const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-84.wav');
+  audio.volume = 0.8;
+  audio.play().catch(e => console.log("تنبيه: المتصفح يتطلب تفاعلاً لتشغيل الصوت أولاً:", e));
+};
 
   // تكوين إعدادات STUN Server لتخطي جدران الحماية للشبكة المحلية
  const rtcConfig = {
@@ -37,26 +49,38 @@ export default function Dashboard() {
   iceCandidatePoolSize: 10
 };
 
-// 2. دالة التحكم في الحساب التصاعدي للمؤقت كل ثانية
+// 3. دالة التحكم في الحساب التنازلي
 React.useEffect(() => {
   let interval = null;
-  if (isTimerRunning) {
+  if (isTimerRunning && timeLeft > 0) {
     interval = setInterval(() => {
-      setTime((prevTime) => prevTime + 1);
+      setTimeLeft((prev) => prev - 1);
     }, 1000);
+  } else if (timeLeft === 0 && isTimerRunning) {
+    setIsTimerRunning(false);
+    playAlarmSound(); // إطلاق الصوت فوراً عند الوصول لـ 00:00:00
   } else {
     clearInterval(interval);
   }
   return () => clearInterval(interval);
-}, [isTimerRunning]);
+}, [isTimerRunning, timeLeft]);
 
-// 3. دالة تحويل الثواني إلى صيغة رقمية احترافية (00:00:00)
+// 4. تحويل الثواني إلى صيغة العرض (00:00:00)
 const formatTime = (totalSeconds) => {
   const hrs = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
   const mins = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
   const secs = String(totalSeconds % 60).padStart(2, '0');
   return `${hrs}:${mins}:${secs}`;
 };
+
+// 5. دالة تحديث الوقت عند تغيير المدة يدوياً
+const handleTimeChange = (mins) => {
+  const minutes = parseInt(mins) || 0;
+  setInputMinutes(minutes);
+  setTimeLeft(minutes * 60);
+  setIsTimerRunning(false);
+};
+
   useEffect(() => {
     // 1. تحديثات ساعة النظام والـ Telemetry
     const timer = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
@@ -253,33 +277,57 @@ const formatTime = (totalSeconds) => {
 />
             </div>
           </div>
-          {/* --- مكون المؤقت التصاعدي الاحترافي --- */}
+         {/* --- مكون المؤقت التنازلي التفاعلي المطور --- */}
 <div className="mt-4 bg-[#0d1527] border border-[#1e293b] rounded-xl p-5 flex flex-col items-center justify-center shadow-lg backdrop-blur-md">
-  <div className="text-[#94a3b8] text-xs font-semibold tracking-wider uppercase mb-2 flex items-center gap-2">
-    <span className="w-2 h-2 rounded-full bg-[#38bdf8] animate-pulse"></span>
-    مؤقت البث والعرض المباشر
+  <div className="text-[#94a3b8] text-xs font-semibold tracking-wider uppercase mb-3 flex items-center gap-2">
+    <span className={`w-2 h-2 rounded-full ${isTimerRunning ? 'bg-rose-500 animate-ping' : 'bg-[#38bdf8]'}`}></span>
+    التحكم في زمن العرض والتنبيه
   </div>
   
-  {/* شاشة عرض الوقت */}
-  <div className="text-4xl font-mono font-bold text-white tracking-widest bg-[#070a13] px-6 py-3 rounded-lg border border-[#334155] shadow-inner mb-4 min-w-[200px] text-center">
-    {formatTime(time)}
+  {/* لوحة تحديد الوقت يدوياً قبل البدء */}
+  <div className="flex items-center gap-2 mb-4 w-full justify-between bg-[#070a13] p-2 rounded-lg border border-[#1e293b]">
+    <span className="text-xs text-[#94a3b8] mr-1">تحديد المدة:</span>
+    <div className="flex gap-1 items-center">
+      <input 
+        type="number" 
+        min="1" 
+        max="180"
+        value={inputMinutes}
+        onChange={(e) => handleTimeChange(e.target.value)}
+        disabled={isTimerRunning}
+        className="w-16 bg-[#0d1527] border border-[#334155] rounded px-2 py-1 text-center text-sm font-mono text-white focus:outline-none focus:border-[#38bdf8] disabled:opacity-50"
+      />
+      <span className="text-xs text-[#64748b]">دقيقة</span>
+    </div>
   </div>
   
-  {/* أزرار التحكم بالتوقيت */}
+  {/* شاشة عرض الوقت الرقمي الحية */}
+  <div className={`text-4xl font-mono font-bold tracking-widest bg-[#070a13] px-6 py-3 rounded-lg border shadow-inner mb-4 min-w-[200px] text-center transition-all duration-300 ${
+    timeLeft <= 10 && timeLeft > 0 && isTimerRunning
+      ? 'text-rose-500 border-rose-500/50 animate-pulse' 
+      : 'text-white border-[#334155]'
+  }`}>
+    {formatTime(timeLeft)}
+  </div>
+  
+  {/* أزرار التحكم الفورية */}
   <div className="flex gap-2 w-full">
     <button
-      onClick={() => setIsTimerRunning(!isTimerRunning)}
+      onClick={() => {
+        if (timeLeft > 0) setIsTimerRunning(!isTimerRunning);
+      }}
+      disabled={timeLeft === 0}
       className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold tracking-wide transition-all duration-200 uppercase ${
         isTimerRunning 
           ? 'bg-amber-600/20 text-amber-400 border border-amber-500/40 hover:bg-amber-600/30' 
           : 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-600/30'
-      }`}
+      } disabled:opacity-30`}
     >
-      {isTimerRunning ? 'إيقاف مؤقت' : 'بدء المؤقت'}
+      {isTimerRunning ? 'إيقاف مؤقت' : 'بدء العرض'}
     </button>
     
     <button
-      onClick={() => { setIsTimerRunning(false); setTime(0); }}
+      onClick={() => { setIsTimerRunning(false); setTimeLeft(inputMinutes * 60); }}
       className="py-2 px-4 rounded-lg text-xs font-bold bg-rose-600/20 text-rose-400 border border-rose-500/40 hover:bg-rose-600/30 transition-all duration-200 uppercase"
     >
       إعادة تعيين
